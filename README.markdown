@@ -6,6 +6,30 @@ NAME
 
 green - a lightweight PDF reader for the Framebuffer using libpoppler
 
+BUILDING
+--------
+
+Native builds only require a recent C compiler together with the Poppler GLib
+and SDL development files:
+
+```
+make
+```
+
+For cross-compilation you can override the common tool variables.  When using
+the Buildroot toolchain that lives in `/opt/buildroot`, the build system can
+discover the compiler prefix, `pkg-config`, and the SDL tooling automatically:
+
+```
+make BUILDROOT=/opt/buildroot
+```
+
+If your Buildroot output directory lives elsewhere you can point `BUILDROOT`
+to either the Buildroot top level or directly to the output directory.  You
+may also override `CROSS_COMPILE`, `PKG_CONFIG`, `SDL_CONFIG`, `SYSROOT`,
+`CPPFLAGS`, and `LDFLAGS` manually when integrating with other cross
+toolchains.
+
 SYNOPSIS
 --------
 
