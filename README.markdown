@@ -30,6 +30,10 @@ may also override `CROSS_COMPILE`, `PKG_CONFIG`, `SDL_CONFIG`, `SYSROOT`,
 `CPPFLAGS`, and `LDFLAGS` manually when integrating with other cross
 toolchains.
 
+To include debug symbols while building (for both native and cross builds)
+pass `DEBUG=1` on the `make` command line.  You can customize the emitted
+flags through `DEBUG_CFLAGS` when needed.
+
 SYNOPSIS
 --------
 

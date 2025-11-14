@@ -21,6 +21,14 @@
 #include <stdbool.h>
 #include "glib/poppler.h"
 
+#ifndef GREEN_SYSCONFIG_FILE
+#define GREEN_SYSCONFIG_FILE "/usr/local/etc/green.conf"
+#endif
+
+#ifndef GREEN_USERCONFIG_FILE
+#define GREEN_USERCONFIG_FILE ".green.conf"
+#endif
+
 
 #define GREEN_FULLSCREEN	0x0001
 

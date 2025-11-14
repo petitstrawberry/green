@@ -8,6 +8,9 @@ SDL_CONFIG ?= sdl-config
 RM 	?= rm -f
 INSTALL ?= install
 
+DEBUG ?= 0
+DEBUG_CFLAGS ?= -g
+
 DESTDIR 	?=
 PREFIX 	?= /usr/local
 BINDIR 	?= $(PREFIX)/bin
@@ -18,26 +21,38 @@ CPPFLAGS ?=
 CFLAGS	?=
 LDFLAGS ?=
 LDLIBS 	?=
-
-CPPFLAGS += -D GREEN_SYSCONFIG_FILE="$(SYSCONFDIR)/green.conf" -D GREEN_USERCONFIG_FILE=".green.conf"
 CFLAGS	+= -Os -Wall
 
+ifeq ($(DEBUG),1)
+CFLAGS += $(DEBUG_CFLAGS)
+endif
+
 ifneq ($(BUILDROOT),)
+ifeq ($(HOST_DIR),)
 ifneq ($(wildcard $(BUILDROOT)/host),)
-HOST_DIR ?= $(BUILDROOT)/host
-SYSROOT ?= $(BUILDROOT)/staging
-else
-ifneq ($(wildcard $(BUILDROOT)/output/host),)
-HOST_DIR ?= $(BUILDROOT)/output/host
-SYSROOT ?= $(BUILDROOT)/output/staging
+HOST_DIR := $(BUILDROOT)/host
+ifeq ($(SYSROOT),)
+SYSROOT := $(BUILDROOT)/staging
+endif
+else ifneq ($(wildcard $(BUILDROOT)/output/host),)
+HOST_DIR := $(BUILDROOT)/output/host
+ifeq ($(SYSROOT),)
+SYSROOT := $(BUILDROOT)/output/staging
+endif
+endif
+endif
+endif
+
+ifeq ($(CROSS_COMPILE),)
+ifneq ($(HOST_DIR),)
+first_cross := $(firstword $(wildcard $(HOST_DIR)/bin/*-gcc))
+ifneq ($(first_cross),)
+CROSS_COMPILE := $(patsubst %gcc,%,$(first_cross))
 endif
 endif
 endif
 
 ifneq ($(HOST_DIR),)
-ifneq ($(wildcard $(HOST_DIR)/bin/*-gcc),)
-CROSS_COMPILE ?= $(patsubst %gcc,%,$(firstword $(wildcard $(HOST_DIR)/bin/*-gcc)))
-endif
 ifneq ($(wildcard $(HOST_DIR)/bin/pkg-config),)
 PKG_CONFIG := $(HOST_DIR)/bin/pkg-config
 endif
@@ -58,20 +73,28 @@ export PKG_CONFIG_LIBDIR ?= $(SYSROOT)/usr/lib/pkgconfig:$(SYSROOT)/usr/share/pk
 export PKG_CONFIG_DIR :=
 endif
 
-CC	?= $(CROSS_COMPILE)gcc
-AR	?= $(CROSS_COMPILE)ar
-STRIP	?= $(CROSS_COMPILE)strip
+ifeq ($(origin CC), default)
+CC := $(if $(CROSS_COMPILE),$(CROSS_COMPILE)gcc,cc)
+endif
 
-POPPLER_CFLAGS	:= $$($(PKG_CONFIG) poppler-glib --cflags)
-POPPLER_LIBS	:= $$($(PKG_CONFIG) poppler-glib --libs)
+ifeq ($(origin AR), default)
+AR := $(if $(CROSS_COMPILE),$(CROSS_COMPILE)ar,ar)
+endif
+
+ifeq ($(origin STRIP), default)
+STRIP := $(if $(CROSS_COMPILE),$(CROSS_COMPILE)strip,strip)
+endif
+
+POPPLER_CFLAGS	:= $(shell $(PKG_CONFIG) --cflags poppler-glib 2>/dev/null)
+POPPLER_LIBS	:= $(shell $(PKG_CONFIG) --libs poppler-glib 2>/dev/null)
 
 SDL_WITH_PKGCONFIG := $(shell $(PKG_CONFIG) --exists sdl && echo yes)
 ifeq ($(SDL_WITH_PKGCONFIG),yes)
-SDL_CFLAGS	:= $$($(PKG_CONFIG) sdl --cflags)
-SDL_LIBS	:= $$($(PKG_CONFIG) sdl --libs)
+SDL_CFLAGS	:= $(shell $(PKG_CONFIG) --cflags sdl 2>/dev/null)
+SDL_LIBS	:= $(shell $(PKG_CONFIG) --libs sdl 2>/dev/null)
 else
-SDL_CFLAGS	:= $$($(SDL_CONFIG) --cflags)
-SDL_LIBS	:= $$($(SDL_CONFIG) --libs)
+SDL_CFLAGS	:= $(shell $(SDL_CONFIG) --cflags 2>/dev/null)
+SDL_LIBS	:= $(shell $(SDL_CONFIG) --libs 2>/dev/null)
 endif
 
 LDLIBS 	+= $(POPPLER_LIBS) $(SDL_LIBS)
