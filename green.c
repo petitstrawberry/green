@@ -85,10 +85,15 @@ int	Green_Open( Green_RTD *rtd, char *uri )
 		free( doc );
 		return -1;
 	}
+
+	GError	*error = NULL;
 	
-	doc->doc = poppler_document_new_from_file( doc->uri, NULL, NULL );
+	doc->doc = poppler_document_new_from_file( doc->uri, NULL, &error );
 	if (!doc->doc)
 	{
+		g_printerr("Failed to open document: %s\n", error->message);
+    	g_error_free(error);
+
 		free( doc->uri );
 		free( doc );
 		return -2;

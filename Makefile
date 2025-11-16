@@ -21,10 +21,13 @@ CPPFLAGS ?=
 CFLAGS	?=
 LDFLAGS ?=
 LDLIBS 	?=
-CFLAGS	+= -Os -Wall
+CFLAGS	+= -Wall
 
 ifeq ($(DEBUG),1)
 CFLAGS += $(DEBUG_CFLAGS)
+CFLAGS += -O0
+else
+CFLAGS += -Os
 endif
 
 ifneq ($(BUILDROOT),)
